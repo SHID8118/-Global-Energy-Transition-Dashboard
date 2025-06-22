@@ -44,4 +44,5 @@ page_map = {
 }
 
 if st.button("Go to Analysis"):
-    st.switch_page(f"pages/{page_map[question]}.py")
+    st.markdown(f"[👉 Click here to go to the selected page](./{page_map[question]})")
+
