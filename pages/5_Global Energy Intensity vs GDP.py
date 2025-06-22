@@ -15,24 +15,19 @@ This dashboard visualizes the change in global energy intensity — defined as t
 It helps track how efficiently the world is using energy as economies grow.
 """)
 
-@st.cache_data
+
 @st.cache_data
 def load_data():
-    # Try skipping 0 to 5 rows (adjust as needed)
     df = pd.read_excel("data/Total-energy-supply-_TES_-by-GDP-World.xlsx", skiprows=3)
-    
-    df.columns = df.columns.str.strip()  # Clean column names
+    df.columns = df.columns.str.strip()
 
-    # 👇 Debug print to show what columns were actually read
-    st.write("Detected columns:", df.columns.tolist())
-
-    if "Year" not in df.columns or "TES/GDP PPP" not in df.columns:
-        st.error("Expected columns like 'Year' and 'TES/GDP PPP' not found.")
+    if "Year" not in df.columns or "TES/GDP" not in df.columns:
+        st.error("Expected columns like 'Year' and 'TES/GDP' not found.")
         return pd.DataFrame()
 
-    df = df[["Year", "TES/GDP PPP"]].dropna()
+    df = df[["Year", "TES/GDP"]].dropna()
     df["Year"] = pd.to_numeric(df["Year"], errors="coerce").astype(int)
-    df["TES/GDP PPP"] = pd.to_numeric(df["TES/GDP PPP"], errors="coerce")
+    df["TES/GDP"] = pd.to_numeric(df["TES/GDP"], errors="coerce")
 
     return df
 
