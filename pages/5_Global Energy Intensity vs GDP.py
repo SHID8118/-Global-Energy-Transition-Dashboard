@@ -16,23 +16,26 @@ It helps track how efficiently the world is using energy as economies grow.
 """)
 
 @st.cache_data
+@st.cache_data
 def load_data():
-    # Skip metadata rows; assume actual data starts from row 4 (index 3)
+    # Try skipping 0 to 5 rows (adjust as needed)
     df = pd.read_excel("data/Total-energy-supply-_TES_-by-GDP-World.xlsx", skiprows=3)
-
+    
     df.columns = df.columns.str.strip()  # Clean column names
+
+    # 👇 Debug print to show what columns were actually read
+    st.write("Detected columns:", df.columns.tolist())
 
     if "Year" not in df.columns or "TES/GDP PPP" not in df.columns:
         st.error("Expected columns like 'Year' and 'TES/GDP PPP' not found.")
         return pd.DataFrame()
 
     df = df[["Year", "TES/GDP PPP"]].dropna()
-
-    # Convert types
     df["Year"] = pd.to_numeric(df["Year"], errors="coerce").astype(int)
     df["TES/GDP PPP"] = pd.to_numeric(df["TES/GDP PPP"], errors="coerce")
 
     return df
+
 
 df = load_data()
 
