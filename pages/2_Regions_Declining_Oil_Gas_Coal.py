@@ -2,48 +2,62 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(layout="wide", page_title="Regions Declining Fossil Demand", page_icon="🌍")
+st.set_page_config(
+    layout="wide",
+    page_title="Regions Declining Fossil Demand",
+    page_icon="🌍"
+)
 
 @st.cache_data
 def load_data():
-    # assume this file has columns: region, year, oil_demand_twh, gas_demand_twh, coal_demand_twh
+    # Load the region-scenario table
     df = pd.read_excel("data/bpEO24-change-in-oil-demand-by-region.xlsx")
-    df.columns = df.columns.str.strip().str.lower()
-    df = df.rename(columns={
-        "oil_demand_twh": "Oil",
-        "gas_demand_twh": "Gas",
-        "coal_demand_twh": "Coal"
-    })
-    # pick top 5 regions with largest decline from 2010 to latest
-    df_period = df[df["year"].isin([2010, df["year"].max()])]
-    pivot = df_period.pivot(index="region", columns="year", values=["Oil", "Gas", "Coal"])
-    declines = ((pivot.xs(df["year"].max(), axis=1, level=1) - pivot.xs(2010, axis=1, level=1))
-                .sum(axis=1)).sort_values()
-    top5 = declines.head(5).index.tolist()
-    return df[df["region"].isin(top5)]
+    # Rename the first column to 'scenario'
+    df = df.rename(columns={"Year": "scenario"})
+    
+    # Melt so each row is one region–scenario pair
+    long = df.melt(
+        id_vars=["scenario"],
+        value_vars=["Developed", "China", "Emerging ex. China", "Total"],
+        var_name="region",
+        value_name="demand_change_twh"
+    )
+    return long
 
 df = load_data()
 
 st.title("Which regions show consistent decline in oil/gas/coal demand?")
 st.markdown("""
-We look at the 5 regions with the largest absolute decline in fossil energy demand between 2010 and today.
+This chart compares projected changes in fossil demand (TWh) for key regions under two pathways:
+- **Current Trajectory**  
+- **Net Zero**  
 """)
 
-fig = px.line(
-    df, x="year", y=["Oil", "Gas", "Coal"], color="region",
-    title="Fossil Demand Trend for Top 5 Declining Regions",
-    labels={"value": "TWh", "variable": "Fuel"}
+# Grouped bar chart
+fig = px.bar(
+    df,
+    x="scenario",
+    y="demand_change_twh",
+    color="region",
+    barmode="group",
+    title="Projected Change in Fossil Demand by Region",
+    labels={
+        "scenario": "Pathway Scenario",
+        "demand_change_twh": "Change in Demand (TWh)",
+        "region": "Region"
+    }
 )
 st.plotly_chart(fig, use_container_width=True)
 
 with st.expander("📌 Narrative"):
     st.markdown("""
-    These regions have reduced fossil demand most sharply, driven by declining industrial output,
-    fuel switching and efficiency measures.
+    - Under the **Net Zero** pathway, all regions cut demand far more sharply than under the current trajectory.  
+    - “Developed” economies reduce by ~21 TWh vs ~8.6 TWh today, while “Emerging ex. China” drop by ~22 TWh vs +7 TWh under business-as-usual.  
+    - China itself swings from a small increase under current policies to a ~9 TWh reduction in Net Zero.  
     """)
 
 with st.expander("📊 Data Source"):
     st.markdown("""
     - `data/bpEO24-change-in-oil-demand-by-region.xlsx`  
-    - Columns: `region`, `year`, `oil_demand_twh`, `gas_demand_twh`, `coal_demand_twh`
+    - Table of projected fossil demand change (TWh) by region under two scenarios  
     """)
