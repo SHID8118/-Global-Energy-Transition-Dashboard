@@ -2,37 +2,40 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# Page config
 st.set_page_config(layout="wide", page_title="Fossil vs Renewables", page_icon="📉")
 
+# Load and prepare data
 @st.cache_data
 def load_data():
-    coal_df = pd.read_excel("emberChartData.xlsx")[["Year", "coal"]].dropna()
-    gas_df = pd.read_excel("emberChartData-_1_.xlsx")[["Year", "gas"]].dropna()
-    renew_df = pd.read_excel("emberChartData-_2_.xlsx")[["Year", "wind and solar"]].dropna()
+    coal_df = pd.read_excel("data/emberChartData.xlsx")[["Year", "coal"]].dropna()
+    gas_df = pd.read_excel("data/emberChartData-_1_.xlsx")[["Year", "gas"]].dropna()
+    renew_df = pd.read_excel("data/emberChartData-_2_.xlsx")[["Year", "wind and solar"]].dropna()
 
     # Merge on Year
     df = coal_df.merge(gas_df, on="Year", how="inner").merge(renew_df, on="Year", how="inner")
 
-    # Rename columns for clarity in plot
+    # Rename for clarity
     df.rename(columns={
         "coal": "Coal",
         "gas": "Gas",
         "wind and solar": "Wind & Solar"
     }, inplace=True)
 
+    # Add fossil total
     df["Fossil Fuels"] = df["Coal"] + df["Gas"]
     return df
 
 df = load_data()
 
-# UI
+# UI Header and Download
 col1, col2 = st.columns([3, 1])
 with col1:
     st.title("📉 Global Fossil vs Renewable Energy Trends (2000–2023)")
 with col2:
     st.download_button("Download Data", df.to_csv(index=False), "fossil_vs_renewables.csv")
 
-# Visualization
+# Plotting
 fig = px.area(
     df,
     x="Year",
@@ -46,7 +49,7 @@ fig = px.area(
 )
 st.plotly_chart(fig, use_container_width=True)
 
-# Narrative / Insights
+# Narrative
 with st.expander("📌 Key Insights"):
     st.markdown("""
     - **Fossil fuels still dominate**, contributing ~70% of global electricity generation as of 2023.
@@ -54,10 +57,11 @@ with st.expander("📌 Key Insights"):
     - **Tipping point**: Wind & solar overtook hydro as a source of renewable electricity around 2020.
     """)
 
+# Data source reference
 with st.expander("📊 Data Sources Used"):
     st.markdown("""
-    - `emberChartData.xlsx` – Coal  
-    - `emberChartData-_1_.xlsx` – Gas  
-    - `emberChartData-_2_.xlsx` – Wind & Solar  
-    - All values in **TWh (Terawatt-hours)**  
+    - `data/emberChartData.xlsx` – Coal  
+    - `data/emberChartData-_1_.xlsx` – Gas  
+    - `data/emberChartData-_2_.xlsx` – Wind & Solar  
+    - All values in **TWh (Terawatt-hours)**
     """)
