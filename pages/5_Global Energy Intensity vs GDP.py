@@ -39,6 +39,12 @@ if df.empty:
 else:
     # Plot
     import plotly.express as px
+st.write("Preview of data being plotted:")
+st.dataframe(df.head())
+
+if df.empty:
+    st.error("No data available after processing.")
+    st.stop()
 
 fig = px.line(
     df,
