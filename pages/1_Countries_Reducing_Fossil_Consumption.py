@@ -8,9 +8,9 @@ st.set_page_config(layout="wide", page_title="Fossil vs Renewables", page_icon="
 # Load and prepare data
 @st.cache_data
 def load_data():
-    coal_df = pd.read_excel("data/emberChartData.xlsx")[["Year", "coal"]].dropna()
-    gas_df = pd.read_excel("data/emberChartData-_1_.xlsx")[["Year", "gas"]].dropna()
-    renew_df = pd.read_excel("data/emberChartData-_2_.xlsx")[["Year", "wind and solar"]].dropna()
+    coal_df = pd.read_excel("data/emberChartData.xlsx")[["Year", "Coal"]].dropna()
+    gas_df = pd.read_excel("data/emberChartData-_1_.xlsx")[["Year", "Gas"]].dropna()
+    renew_df = pd.read_excel("data/emberChartData-_2_.xlsx")[["Year", "Wind and Solar"]].dropna()
 
     # Merge on Year
     df = coal_df.merge(gas_df, on="Year", how="inner").merge(renew_df, on="Year", how="inner")
