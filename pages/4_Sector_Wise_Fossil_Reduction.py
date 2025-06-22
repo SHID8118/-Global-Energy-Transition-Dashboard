@@ -44,15 +44,21 @@ def load_data():
     df_long["value"] = pd.to_numeric(df_long["value"], errors="coerce")
     return df_long
 
-df = load_data()
+@st.cache_data
+def load_data():
+    import pandas as pd
+    # Read the raw sheet without skipping to inspect
+    raw = pd.read_excel("data/INT-Export-04-03-2025_21-40-52.xlsx", header=None)
+    st.write("First 10 rows of raw sheet:")
+    st.write(raw.head(10))
+    # Also show the row where the year columns start
+    for i, row in raw.iterrows():
+        if any(str(cell).startswith("1973") for cell in row):
+            st.write(f"Year header found at row index: {i}")
+            st.write(row.tolist())
+            break
+    st.stop()
 
-st.title("Global Petroleum Production by Series (1973–2023)")
-st.markdown("""
-Compare trends in:
-- **Total liquids**  
-- **Crude oil & NGPL**  
-- **Crude oil (condensate)**  
-""")
 
 fig = px.line(
     df,
