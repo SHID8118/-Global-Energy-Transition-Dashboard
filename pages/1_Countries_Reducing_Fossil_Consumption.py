@@ -4,6 +4,12 @@ import plotly.express as px
 
 # Page config
 st.set_page_config(layout="wide", page_title="Fossil vs Renewables", page_icon="📉")
+import streamlit as st
+import pandas as pd
+
+df_debug = pd.read_excel("data/emberChartData.xlsx")
+st.write("Column names in emberChartData.xlsx:")
+st.write(df_debug.columns.tolist())
 
 # Load and prepare data
 @st.cache_data
