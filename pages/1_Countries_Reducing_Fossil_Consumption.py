@@ -3,6 +3,9 @@ import pandas as pd
 import plotly.express as px
 
 st.set_page_config(layout="wide", page_title="Fossil vs Renewables", page_icon="📉")
+df = pd.read_excel("data/emberChartData.xlsx")
+st.write("Unique variable names:", df["variable"].unique())
+st.stop()  # halt execution so you can see the output
 
 @st.cache_data
 def load_data():
