@@ -2,49 +2,43 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Page config
 st.set_page_config(layout="wide", page_title="Fossil vs Renewables", page_icon="📉")
-import streamlit as st
-import pandas as pd
 
-df_debug = pd.read_excel("data/emberChartData.xlsx")
-st.write("Column names in emberChartData.xlsx:")
-st.write(df_debug.columns.tolist())
-
-# Load and prepare data
 @st.cache_data
 def load_data():
-    coal_df = pd.read_excel("data/emberChartData.xlsx")[["Year", "Coal"]].dropna()
-    gas_df = pd.read_excel("data/emberChartData-_1_.xlsx")[["Year", "Gas"]].dropna()
-    renew_df = pd.read_excel("data/emberChartData-_2_.xlsx")[["Year", "Wind and Solar"]].dropna()
+    df = pd.read_excel("data/emberChartData.xlsx")
+    df.columns = df.columns.str.strip().str.lower()
 
-    # Merge on Year
-    df = coal_df.merge(gas_df, on="Year", how="inner").merge(renew_df, on="Year", how="inner")
+    # Filter only required variables
+    df = df[df['variable'].isin(['coal', 'gas', 'wind and solar'])]
+    
+    # Pivot to wide format
+    df_pivot = df.pivot_table(index="year", columns="variable", values="generation_twh", aggfunc="sum").reset_index()
 
     # Rename for clarity
-    df.rename(columns={
+    df_pivot.rename(columns={
         "coal": "Coal",
         "gas": "Gas",
         "wind and solar": "Wind & Solar"
     }, inplace=True)
 
-    # Add fossil total
-    df["Fossil Fuels"] = df["Coal"] + df["Gas"]
-    return df
+    # Add derived column
+    df_pivot["Fossil Fuels"] = df_pivot["Coal"] + df_pivot["Gas"]
+    return df_pivot
 
 df = load_data()
 
-# UI Header and Download
+# UI
 col1, col2 = st.columns([3, 1])
 with col1:
     st.title("📉 Global Fossil vs Renewable Energy Trends (2000–2023)")
 with col2:
     st.download_button("Download Data", df.to_csv(index=False), "fossil_vs_renewables.csv")
 
-# Plotting
+# Visualization
 fig = px.area(
     df,
-    x="Year",
+    x="year",
     y=["Fossil Fuels", "Wind & Solar"],
     title="Global Electricity Generation Mix",
     labels={"value": "TWh", "variable": "Source"},
@@ -55,7 +49,7 @@ fig = px.area(
 )
 st.plotly_chart(fig, use_container_width=True)
 
-# Narrative
+# Narrative / Insights
 with st.expander("📌 Key Insights"):
     st.markdown("""
     - **Fossil fuels still dominate**, contributing ~70% of global electricity generation as of 2023.
@@ -63,11 +57,9 @@ with st.expander("📌 Key Insights"):
     - **Tipping point**: Wind & solar overtook hydro as a source of renewable electricity around 2020.
     """)
 
-# Data source reference
 with st.expander("📊 Data Sources Used"):
     st.markdown("""
-    - `data/emberChartData.xlsx` – Coal  
-    - `data/emberChartData-_1_.xlsx` – Gas  
-    - `data/emberChartData-_2_.xlsx` – Wind & Solar  
-    - All values in **TWh (Terawatt-hours)**
+    - `emberChartData.xlsx`  
+    - Source: [Ember Climate Global Electricity Review](https://ember-climate.org/)  
+    - Filtered for: **Coal, Gas, Wind and Solar** generation (TWh)  
     """)
