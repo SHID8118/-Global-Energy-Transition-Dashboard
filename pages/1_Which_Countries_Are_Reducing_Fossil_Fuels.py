@@ -1,11 +1,16 @@
 import streamlit as st
-import pandas as pd
 
-st.title("📉 Countries Reducing Fossil Fuel Use")
+st.set_page_config(layout="wide")
+st.title("Which countries have reduced their fossil fuel consumption the most in the last decade?")
 
 st.markdown("""
-This section analyzes trends based on available datasets related to global energy consumption and production.
-More detailed visualizations and insights will be added.
+This analysis highlights the countries that have made the most progress in cutting fossil fuel consumption (coal, oil, and gas) since 2010.
 """)
 
-st.info("👉 Add visualizations and narratives here.")
+st.markdown("### 📊 Data Source")
+st.markdown("""
+- **File**: `owid-energy-data.xlsx`  
+- **Columns**: `country`, `year`, `coal_consumption`, `oil_consumption`, `gas_consumption`
+""")
+
+st.info("👉 Add charts and data visualizations here.")
