@@ -13,7 +13,7 @@ st.set_page_config(
 def load_data():
     # 1) Read sheet, skipping the first metadata row
     df = pd.read_excel(
-        "INT-Export-04-03-2025_21-40-52.xlsx",
+        "data/INT-Export-04-03-2025_21-40-52.xlsx",
         skiprows=1,        # skip the "Report generated on..." row
         header=0,          # use the next row as header
         dtype=str
