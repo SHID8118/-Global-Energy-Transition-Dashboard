@@ -38,17 +38,20 @@ if df.empty:
     st.warning("No valid data available to display. Please check the Excel file format.")
 else:
     # Plot
-    fig = px.line(
-        df,
-        x="Year",
-        y="TES/GDP PPP",
-        markers=True,
-        title="Global Energy Intensity (MJ per thousand 2015 USD PPP)",
-        labels={
-            "TES/GDP PPP": "MJ per 1000 USD (PPP)",
-            "Year": "Year"
-        },
-    )
+    import plotly.express as px
+
+fig = px.line(
+    df,
+    x="Year",
+    y="TES/GDP",
+    title="📉 Global Energy Intensity Over Time",
+    labels={
+        "Year": "Year",
+        "TES/GDP": "Energy Intensity (MJ/thousand 2015 USD)"
+    }
+)
+st.plotly_chart(fig, use_container_width=True)
+
     fig.update_traces(line=dict(color="blue"))
     fig.update_layout(hovermode="x unified")
 
