@@ -5,4 +5,4 @@ numpy
 matplotlib
 openpyxl
 st-pages
-streamlit-pages
+
