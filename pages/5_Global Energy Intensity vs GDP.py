@@ -10,9 +10,9 @@ st.set_page_config(layout="wide", page_title="Energy Supply Dashboard", page_ico
 @st.cache_data
 def load_data():
     # Use the correct filenames with underscores around "TES"
-    source_df = pd.read_excel("Total-energy-supply-_TES_-by-source-World.xlsx")
-    gdp_df = pd.read_excel("Total-energy-supply-_TES_-by-GDP-World.xlsx")
-    gdp_ppp_df = pd.read_excel("Total-energy-supply-_TES_-by-GDP-_PPP_-World.xlsx")
+    source_df = pd.read_excel("data/Total-energy-supply-_TES_-by-source-World.xlsx")
+    gdp_df = pd.read_excel("data/Total-energy-supply-_TES_-by-GDP-World.xlsx")
+    gdp_ppp_df = pd.read_excel("data/Total-energy-supply-_TES_-by-GDP-_PPP_-World.xlsx")
     
     # Remove redundant "Units" column
     source_df = source_df.drop(columns=["Units"])
