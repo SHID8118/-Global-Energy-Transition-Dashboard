@@ -5,7 +5,7 @@ st.title("🌍 Global Energy Transition Dashboard")
 st.subheader("Explore energy transition questions based on real-world data")
 
 questions = [
-    "Which countries have reduced their fossil fuel consumption the most in the last decade?",
+    "1_global fossil vs renewable trends.py",
     "Which regions or countries show a consistent decline in oil/gas/coal demand?",
     "How has fossil fuel demand changed globally vs. in specific countries (e.g., India, China, US)?",
     "What sectors are driving fossil fuel reduction (transport, energy, industry)?",
