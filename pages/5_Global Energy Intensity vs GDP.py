@@ -2,22 +2,21 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 st.set_page_config(layout="wide", page_title="Energy Supply Dashboard", page_icon="⚡")
 
 # Load data
 @st.cache_data
 def load_data():
-    # Load source data
+    # Use the correct filenames with underscores around "TES"
     source_df = pd.read_excel("Total-energy-supply-_TES_-by-source-World.xlsx")
-    source_df = source_df.drop(columns=["Units"])  # Remove redundant units column
-    
-    # Load GDP data
     gdp_df = pd.read_excel("Total-energy-supply-_TES_-by-GDP-World.xlsx")
-    gdp_df = gdp_df.drop(columns=["Units"])
-    
-    # Load GDP PPP data
     gdp_ppp_df = pd.read_excel("Total-energy-supply-_TES_-by-GDP-_PPP_-World.xlsx")
+    
+    # Remove redundant "Units" column
+    source_df = source_df.drop(columns=["Units"])
+    gdp_df = gdp_df.drop(columns=["Units"])
     gdp_ppp_df = gdp_ppp_df.drop(columns=["Units"])
     
     # Merge datasets
@@ -47,7 +46,7 @@ try:
     
     # Energy Mix Over Time
     st.subheader("🌍 Energy Source Distribution Over Time")
-    energy_sources = [col for col in df.columns if col not in ["Year", "TES/GDP", "TES/GDP PPP"]]
+    energy_sources = [col for col in df.columns if col not in ["Year", "TES/GDP", "TES/GDP PPP", "Total"]]
     fig1 = px.area(
         df.melt(id_vars="Year", value_vars=energy_sources, var_name="Source", value_name="Production"),
         x="Year",
