@@ -14,80 +14,94 @@ st.set_page_config(
 st.title("📉 Countries Reducing Fossil Fuel Consumption the Most (Last Decade)")
 st.markdown("""
 This dashboard identifies which countries have achieved the largest **percentage reduction** in total fossil fuel consumption (coal + oil + gas)
-over the last decade.
+over the last decade, and lets you explore their full consumption trends.
 """)
 
 @st.cache_data
-def load_data():
-    # Load OWID energy data
+def compute_reductions():
     df = pd.read_excel("data/owid-energy-data.xlsx")
-    # Clean column names
     df.columns = df.columns.str.strip().str.lower()
-    # Filter relevant years
     max_year = int(df["year"].max())
     start_year = max_year - 10
     df = df[df["year"].isin([start_year, max_year])]
-    # Compute total fossil consumption
     df["fossil_total"] = (
-        df.get("coal_consumption", 0).fillna(0) +
-        df.get("oil_consumption", 0).fillna(0) +
-        df.get("gas_consumption", 0).fillna(0)
+        df["coal_consumption"].fillna(0) +
+        df["oil_consumption"].fillna(0) +
+        df["gas_consumption"].fillna(0)
     )
-    # Pivot so each country has start and end values
-    pivot = df.pivot_table(
-        index="country",
-        columns="year",
-        values="fossil_total"
-    ).dropna()
+    pivot = df.pivot(index="country", columns="year", values="fossil_total").dropna()
     pivot["change_pct"] = ((pivot[max_year] - pivot[start_year]) / pivot[start_year] * 100).round(2)
-    # Sort by largest negative change (biggest reduction)
-    result = pivot.sort_values("change_pct").reset_index()
+    result = pivot.reset_index().sort_values("change_pct")
     return result, start_year, max_year
 
-df_change, start_year, max_year = load_data()
+reductions_df, start_year, max_year = compute_reductions()
 
-if df_change.empty:
-    st.warning("No data available for the selected period. Please check your data source.")
+if reductions_df.empty:
+    st.error("Insufficient data to compute reductions.")
     st.stop()
 
-# Show top 10 reducers
+# Show top 10
 top_n = 10
-st.subheader(f"Top {top_n} Countries by % Reduction in Fossil Fuel Use ({start_year} → {max_year})")
-st.dataframe(df_change[["country", start_year, max_year, "change_pct"]].head(top_n).rename(columns={
-    start_year: f"{start_year} (TWh)",
-    max_year: f"{max_year} (TWh)",
-    "change_pct": "Change (%)"
-}))
-
-# Plot trends for top 5
-top5 = df_change.head(5)["country"].tolist()
-trend_df = pd.read_excel("data/owid-energy-data.xlsx")
-trend_df = trend_df[trend_df["country"].isin(top5)]
-trend_df["fossil_total"] = (
-    trend_df.get("coal_consumption", 0).fillna(0) +
-    trend_df.get("oil_consumption", 0).fillna(0) +
-    trend_df.get("gas_consumption", 0).fillna(0)
+top10 = reductions_df.head(top_n)
+st.subheader(f"Top {top_n} Countries by % Reduction ({start_year} → {max_year})")
+st.dataframe(
+    top10.rename(columns={
+        start_year: f"{start_year} (TWh)",
+        max_year: f"{max_year} (TWh)",
+        "change_pct": "Change (%)"
+    })[[ "country", f"{start_year} (TWh)", f"{max_year} (TWh)", "Change (%)" ]]
 )
 
-fig = px.line(
-    trend_df,
-    x="year",
-    y="fossil_total",
-    color="country",
-    title="Fossil Fuel Consumption Trend for Top 5 Reducers",
-    labels={"year":"Year", "fossil_total":"Total Fossil Consumption (TWh)", "country":"Country"},
-    markers=True
+# Dropdown for selecting countries to plot
+all_countries = reductions_df["country"].tolist()
+default_countries = top10["country"].tolist()
+selected = st.multiselect(
+    "Select countries to view full consumption trends:",
+    options=all_countries,
+    default=default_countries
 )
-fig.update_layout(legend_title_text="Country")
-st.plotly_chart(fig, use_container_width=True)
+
+# Load full time series
+@st.cache_data
+def load_trends(countries):
+    df_full = pd.read_excel("data/owid-energy-data.xlsx")
+    df_full.columns = df_full.columns.str.strip().str.lower()
+    df_full = df_full[df_full["country"].isin(countries)]
+    df_full["fossil_total"] = (
+        df_full["coal_consumption"].fillna(0) +
+        df_full["oil_consumption"].fillna(0) +
+        df_full["gas_consumption"].fillna(0)
+    )
+    df_full = df_full.dropna(subset=["year", "fossil_total"])
+    df_full["year"] = df_full["year"].astype(int)
+    return df_full
+
+trend_df = load_trends(selected)
+
+if trend_df.empty:
+    st.warning("No trend data available for the selected countries.")
+else:
+    fig = px.line(
+        trend_df,
+        x="year",
+        y="fossil_total",
+        color="country",
+        title="Fossil Fuel Consumption Trends",
+        labels={
+            "year": "Year",
+            "fossil_total": "Total Fossil Consumption (TWh)",
+            "country": "Country"
+        },
+        markers=True
+    )
+    fig.update_layout(hovermode="x unified")
+    st.plotly_chart(fig, use_container_width=True)
 
 # Narrative
 with st.expander("📌 Narrative"):
     st.markdown(f"""
-    Over the period **{start_year} to {max_year}**, the following countries achieved the largest percentage cuts in 
-    coal, oil, and gas consumption, indicating strong progress in their energy transition:
-    - **{', '.join(top5)}** lead the list of top reducers.
-    - These declines reflect shifts to renewables, efficiency measures, and policy interventions.
+    Between **{start_year}** and **{max_year}**, the countries listed above reduced their total fossil fuel consumption by the greatest percentages.
+    Use the dropdown to explore the full historical trends for any selection of countries.
     """)
 
 # Data Source
