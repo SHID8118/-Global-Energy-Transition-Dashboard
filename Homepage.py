@@ -6,7 +6,7 @@ st.subheader("Explore energy transition questions based on real-world data")
 
 questions = [
     "1-globally fossil vs renewable trends",
-    "Which regions or countries show a consistent decline in oil/gas/coal demand?",
+    "2-Which regions or countries show a consistent decline in oil/gas/coal demand?",
     "How has fossil fuel demand changed globally vs. in specific countries (e.g., India, China, US)?",
     "What sectors are driving fossil fuel reduction (transport, energy, industry)?",
     "Which countries have the highest growth in renewable energy share?",
