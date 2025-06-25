@@ -4,75 +4,72 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(layout="wide", page_title="Ren vs Fossil Correlation", page_icon="🔗")
+st.set_page_config(layout="wide", page_title="Renewables vs Fossil Reduction", page_icon="🔗")
+
+st.title("🔗 Renewable Share vs Fossil Fuel Consumption")
+st.markdown("""
+This dashboard explores how **renewable energy growth** correlates with **fossil fuel consumption**.
+Data is from the most recent year available.
+""")
 
 @st.cache_data
 
 def load_data():
-    # Load data
-    fos = pd.read_excel("data/owid-energy-data.xlsx")
-    ren = pd.read_excel("data/Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx", skiprows=3)
+    df = pd.read_excel("data/owid-energy-data.xlsx")
+    df = df[df["year"] == df["year"].max()]  # filter for latest year
 
-    # Normalize columns for easier access
-    fos.columns = fos.columns.str.strip().str.lower()
-    ren.columns = ren.columns.str.strip().str.lower()
+    df = df[[
+        "country",
+        "coal_consumption",
+        "oil_consumption",
+        "gas_consumption",
+        "renewables_share_energy"
+    ]]
 
-    # Filter for latest year for fossil data
-    fossil_year = fos["year"].max()
-    fos_latest = fos[fos["year"] == fossil_year][["country", "coal_consumption", "oil_consumption", "gas_consumption"]].copy()
-    fos_latest["fossil_total"] = fos_latest[["coal_consumption", "oil_consumption", "gas_consumption"]].sum(axis=1)
+    # Drop aggregates like 'World', 'Asia', etc.
+    exclude = ["World", "Asia", "Africa", "Europe", "North America", "South America", "European Union"]
+    df = df[~df["country"].isin(exclude)]
 
-    # Reshape renewable data
-    year_cols = [c for c in ren.columns if c.isdigit()]
-    if not year_cols:
-        st.error("No year columns found in renewable dataset")
-        st.stop()
+    # Drop rows with missing values
+    df = df.dropna(subset=["renewables_share_energy"])
 
-    latest_year = sorted(year_cols)[-1]  # use last year
-    ren_latest = ren[["entity", latest_year]].rename(columns={"entity": "country", latest_year: "renewables_share"})
+    # Calculate total fossil consumption
+    df["fossil_total"] = df[["coal_consumption", "oil_consumption", "gas_consumption"]].sum(axis=1)
 
-    # Merge
-    merged = pd.merge(fos_latest, ren_latest, on="country")
-    merged = merged.dropna(subset=["renewables_share", "fossil_total"])
-    return merged, fossil_year, latest_year
+    return df
 
-# Load and prepare data
-df, fossil_year, ren_year = load_data()
-
-# Title and Description
-st.title("🔗 Renewable Share vs Fossil Consumption")
-st.markdown(f"""
-This dashboard shows a **scatter plot** comparing the **renewables share** (SDG 7.2) to total **fossil fuel consumption**.
-It highlights how countries are transitioning from fossil fuels to clean energy.
-
-- **Renewables Share Year:** {ren_year}
-- **Fossil Data Year:** {fossil_year}
-""")
+# Load
+df = load_data()
 
 # Scatter Plot
 fig = px.scatter(
     df,
-    x="renewables_share",
+    x="renewables_share_energy",
     y="fossil_total",
     hover_name="country",
-    labels={"renewables_share": "Renewable Share (%)", "fossil_total": "Fossil Consumption (TWh)"},
-    title="Renewables Share vs Fossil Fuel Consumption"
+    labels={
+        "renewables_share_energy": "Renewable Share (%)",
+        "fossil_total": "Fossil Fuel Consumption (TWh)"
+    },
+    title="Renewable Share vs Fossil Fuel Consumption (Latest Year)",
+    color="renewables_share_energy",
+    size="fossil_total"
 )
-fig.update_traces(marker=dict(size=10, color='green'))
 fig.update_layout(hovermode="closest")
 st.plotly_chart(fig, use_container_width=True)
 
 # Narrative
 with st.expander("📌 Key Insights"):
     st.markdown("""
-    - Countries with **higher renewable shares** often exhibit **lower fossil fuel consumption**, but the correlation is not absolute.
-    - Outliers may reflect **large economies** with high consumption but increasing renewables.
-    - The relationship provides a lens into **energy transition progress**.
+    - Countries with **higher renewable shares** often show **lower total fossil fuel use**.
+    - Outliers may suggest countries with both high renewables and high energy demand.
+    - This correlation can help identify leaders and laggards in the energy transition.
     """)
 
 # Data Source
 with st.expander("📊 Data Sources"):
     st.markdown("""
-    - `owid-energy-data.xlsx` (coal, oil, gas consumption by country)
-    - `Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx` (SDG 7.2 share)
+    - `owid-energy-data.xlsx`
+    - Variables used: `coal_consumption`, `oil_consumption`, `gas_consumption`, `renewables_share_energy`
+    - Filtered for the most recent year available.
     """)
