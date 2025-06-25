@@ -25,7 +25,7 @@ def load_data():
 
     # Expected columns
     cols_needed = [
-        "country", "year",
+        "country", "Year",
         "coal_consumption", "oil_consumption", "gas_consumption",
         "renewables_share_energy"
     ]
