@@ -1,113 +1,85 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import re
 
 st.set_page_config(
     layout="wide",
-    page_title="Sector Fossil Reduction",
-    page_icon="🏭"
+    page_title="Petroleum & Liquids Production by Country",
+    page_icon="🌐"
 )
 
-st.title("🏭 What Sectors Are Driving Fossil Fuel Reduction?")
+st.title("\ud83c\udf10 Petroleum & Liquids Production by Country")
 
 st.markdown("""
-This page uses the INT-Export file to show how different fossil-fuel production categories 
-(e.g. total liquids, crude & NGPL, condensate) have trended for any selected country.
+Select a country (or “World”) to see how its various petroleum‐liquid production series evolved from 1973–2023.
 """)
 
 @st.cache_data
 def load_data():
-    # 1) Read Excel, skip only the metadata row
-    df = pd.read_excel(
-        "data/INT-Export-04-03-2025_21-40-52.xlsx",
-        skiprows=1,    # Row 1 is just "Report generated on…"
-        dtype=str      # Keep everything string to avoid type issues
-    )
-    # 2) Force all headers to plain strings, stripped
-    df.columns = [str(c).strip() for c in df.columns]
+    # Load Excel file and skip metadata row
+    df = pd.read_excel("data/INT-Export-04-03-2025_21-40-52.xlsx", skiprows=1, dtype=str)
+    df.columns = [str(c).strip() for c in df.columns]  # Force headers to string
 
-    # 3) Rename first two arbitrary columns
-    df = df.rename(columns={df.columns[0]: "series_code", df.columns[1]: "series_name"})
+    # Rename the first two columns
+    df.rename(columns={df.columns[0]: "series_code", df.columns[1]: "series_name"}, inplace=True)
 
-    # 4) Build a 'country' column by detecting header rows
+    # Detect and assign country
     df["country"] = None
     current_country = None
-    for idx, row in df.iterrows():
-        code = row["series_code"]
-        name = row["series_name"]
-        # Identify rows where series_code is NaN or name == "Production"
+    for i, row in df.iterrows():
+        code, name = row["series_code"], row["series_name"]
         if pd.isna(code) or str(name).strip().lower() == "production":
-            # The real country label sits in the previous 'series_name'
-            prev = df.at[idx - 1, "series_name"] if idx > 0 else None
-            current_country = str(prev).strip() if pd.notna(prev) else current_country
-        df.at[idx, "country"] = current_country or "World"
+            prev_name = df.at[i - 1, "series_name"] if i > 0 else None
+            if prev_name:
+                current_country = str(prev_name).strip()
+        df.at[i, "country"] = current_country or "World"
 
-    # 5) Drop pure-header rows (where series_name == country or == "Production")
-    mask_header = (
-        df["series_name"].str.strip().eq(df["country"]) |
-        df["series_name"].str.strip().str.lower().eq("production")
-    )
-    df = df[~mask_header]
+    # Filter out non-data rows
+    df = df[~df["series_name"].str.strip().isin(["Production"] + df["country"].unique().tolist())]
 
-    # 6) Detect year columns (those whose header is all digits)
-    year_cols = [c for c in df.columns if c.isdigit()]
+    # Detect year columns (string safe)
+    year_cols = [str(c) for c in df.columns if str(c).isdigit() and len(str(c)) == 4]
 
-    # 7) Melt to long form
+    # Melt to long format
     df_long = df.melt(
         id_vars=["country", "series_name"],
         value_vars=year_cols,
         var_name="year",
         value_name="production_mbpd"
     )
-    # 8) Convert types
-    df_long["year"] = pd.to_numeric(df_long["year"], errors="coerce").astype(int)
+
+    df_long["year"] = pd.to_numeric(df_long["year"], errors="coerce", downcast="integer")
     df_long["production_mbpd"] = pd.to_numeric(df_long["production_mbpd"], errors="coerce")
 
-    # 9) Filter out any rows without data
     return df_long.dropna(subset=["production_mbpd"])
 
+# Load the data
 df = load_data()
 
-# Country selector (unique, sorted)
-countries = sorted(df["country"].unique())
-sel = st.selectbox("Select Country", ["World"] + [c for c in countries if c != "World"])
+# Dropdown for country selection
+available_countries = sorted(df["country"].unique())
+selected_country = st.selectbox("Select a Country", ["World"] + [c for c in available_countries if c != "World"])
 
-sub = df[df["country"] == sel]
+# Filter data for selected country
+filtered = df[df["country"] == selected_country]
 
-if sub.empty:
-    st.warning(f"No data to display for {sel}.")
-    st.stop()
-
-# Plot area chart: each series_name is a “sector” analogue
-fig = px.line(
-    sub,
-    x="year",
-    y="production_mbpd",
-    color="series_name",
-    title=f"{sel}: Fossil-Fuel Production by Category (Mb/d)",
-    labels={
-        "year": "Year",
-        "production_mbpd": "Production (Mb/d)",
-        "series_name": "Category"
-    },
-    markers=True
-)
-fig.update_layout(hovermode="x unified")
-st.plotly_chart(fig, use_container_width=True)
-
-with st.expander("📌 Narrative"):
-    st.markdown(f"""
-    - **{sel}** has the following production categories:
-      - **Total petroleum and other liquids**  
-      - **Crude oil, NGPL, and other liquids**  
-      - **Crude oil including lease condensate**  
-    - Use the dropdown above to switch between countries and inspect how each category
-      has evolved from 1973 to 2023.
-    """)
-
-with st.expander("📊 Data Source"):
-    st.markdown("""
-    - File: `data/INT-Export-04-03-2025_21-40-52.xlsx`  
-    - We skip the metadata row and parse “Production” blocks per country.  
-    - Melt years 1973–2023 into tidy form for plotting.
-    """)
+# Display line chart
+if not filtered.empty:
+    fig = px.line(
+        filtered,
+        x="year",
+        y="production_mbpd",
+        color="series_name",
+        title=f"{selected_country}: Petroleum-Liquid Production (Mb/d)",
+        labels={
+            "year": "Year",
+            "production_mbpd": "Production (Mb/d)",
+            "series_name": "Category"
+        },
+        markers=True
+    )
+    fig.update_layout(hovermode="x unified")
+    st.plotly_chart(fig, use_container_width=True)
+else:
+    st.warning("No data found for selected country.")
