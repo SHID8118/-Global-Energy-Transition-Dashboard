@@ -1,4 +1,4 @@
-# pages/5_Countries_Growing_Renewables.py
+# pages/5_Global_Renewables_Share_World.py
 
 import streamlit as st
 import pandas as pd
@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🌍"
 )
 
-st.title("🌍 Global Growth in Renewable Energy Share")
+st.title(":earth_africa: Global Growth in Renewable Energy Share")
 st.markdown("""
 This dashboard explores the global progress in the share of **modern renewables** in final energy consumption, as defined under **SDG 7.2**.
 It reflects how the world's energy consumption is becoming cleaner over time.
@@ -29,18 +29,16 @@ df = load_data()
 # Filter columns for year-wise data
 year_cols = [col for col in df.columns if str(col).isdigit() and len(str(col)) == 4]
 
-# Extract global row (there is only one entity)
-df = df.iloc[[0]]  # Keep only the first row if it's "World"
+# Extract global row (usually the first row for World)
+df = df.iloc[[0]]  # Assume the first row is "World"
 df_long = df.melt(value_vars=year_cols, var_name="Year", value_name="Renewable Share (%)")
 
 # Clean and convert
-
 df_long["Year"] = pd.to_numeric(df_long["Year"], errors="coerce")
 df_long["Renewable Share (%)"] = pd.to_numeric(df_long["Renewable Share (%)"], errors="coerce")
 df_long = df_long.dropna()
 
 # Preview
-total_years = df_long.shape[0]
 st.subheader("Data Preview")
 st.dataframe(df_long.head())
 
