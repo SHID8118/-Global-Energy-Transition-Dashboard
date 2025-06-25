@@ -39,7 +39,7 @@ def load_data():
     df = df[~df["series_name"].str.strip().isin(["Production"] + df["country"].unique().tolist())]
 
     # Detect year columns (string safe)
-    year_cols = [c for c in df.columns if str(c).isdigit() and len(str(c)) == 4]
+    year_cols = [str(c) for c in df.columns if str(c).isdigit() and len(str(c)) == 4]
 
     # Melt to long format
     df_long = df.melt(
@@ -52,16 +52,13 @@ def load_data():
     df_long["year"] = pd.to_numeric(df_long["year"], errors="coerce", downcast="integer")
     df_long["production_mbpd"] = pd.to_numeric(df_long["production_mbpd"], errors="coerce")
 
-    df_long = df_long.dropna(subset=["production_mbpd"]).copy()
-    df_long["country"] = df_long["country"].fillna("Unknown")
-
-    return df_long
+    return df_long.dropna(subset=["production_mbpd"])
 
 # Load the data
 df = load_data()
 
 # Dropdown for country selection
-available_countries = sorted(df["country"].dropna().unique())
+available_countries = sorted(df["country"].unique())
 selected_country = st.selectbox("Select a Country", ["World"] + [c for c in available_countries if c != "World"])
 
 # Filter data for selected country
@@ -86,3 +83,28 @@ if not filtered.empty:
     st.plotly_chart(fig, use_container_width=True)
 else:
     st.warning("No data found for selected country.")
+
+# --- Narrative and Data Source ---
+with st.expander("📌 Narrative"):
+    st.markdown("""
+    This interactive dashboard helps analyze how petroleum and liquid fuel production has evolved globally and across individual countries.
+
+    By selecting a specific country or the global view ("World"), users can:
+    - Track historical trends in total and segmented petroleum output.
+    - Observe when certain countries increased or reduced their production.
+    - Compare between different petroleum liquid series such as:
+        - Crude oil, NGPL, and other liquids
+        - NGPL (Natural Gas Plant Liquids)
+        - Refinery processing gain
+
+    This view supports understanding shifts in production strategy, self-reliance, and energy market dynamics.
+    """)
+
+with st.expander("📊 Data Source"):
+    st.markdown("""
+    - Source File: `INT-Export-04-03-2025_21-40-52.xlsx`
+    - Data provided by International Energy Agency export (assumed structured export)
+    - The file contains country-wise series for petroleum and other liquids from 1973 to 2023
+    - Series include multiple petroleum-based metrics in million barrels per day (Mb/d)
+    - Country segments are identified based on structure of the file (e.g., 'Production' headers)
+    """)
