@@ -1,64 +1,60 @@
-# pages/8_Renewables_vs_Fossil_Reduction.py
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(layout="wide", page_title="Renewables vs Fossils", page_icon="♻️")
-
-st.title("♻️ Renewable Share vs Fossil Fuel Consumption")
-st.markdown("""
-This dashboard explores the correlation between countries' share of **renewable energy** and their **fossil fuel consumption**.
-We compare recent values of each and visualize their relationship.
-""")
+st.set_page_config(layout="wide", page_title="Renewables vs Fossil Correlation", page_icon="🔗")
 
 @st.cache_data
 def load_data():
     df = pd.read_excel("data/owid-energy-data.xlsx")
-    df.columns = df.columns.str.lower()  # normalize columns
+    df.columns = df.columns.str.strip().str.lower()
+    if 'year' not in df.columns:
+        raise KeyError("The 'year' column is missing.")
+    latest_year = df['year'].max()
+    df_latest = df[df['year'] == latest_year]
+    df_latest = df_latest[['country', 'renewables_share_energy', 'fossil_fuel_consumption']]
+    df_latest = df_latest.dropna(subset=['country', 'renewables_share_energy', 'fossil_fuel_consumption'])
+    return df_latest, latest_year
 
-    # Use latest available year
-    latest_year = df["year"].max()
-    df = df[df["year"] == latest_year]
+# Load data
+df, year = load_data()
 
-    # Select required columns
-    cols_needed = [
-        "country", "renewables_share_energy", "fossil_fuel_consumption"
-    ]
-    df = df[cols_needed]
-    df = df.dropna()
+# Title and description
+st.title("Renewables Growth vs Fossil Reduction Correlation")
+st.markdown(f"""
+This scatter plot compares countries' **renewable energy share** and **fossil fuel consumption** in the year **{year}**.
+""")
 
-    df = df.sort_values("renewables_share_energy", ascending=False)
-    return df, latest_year
+# Country selection
+default_countries = df['country'].unique().tolist()
+selected_countries = st.multiselect("Select countries to display:", default_countries, default=default_countries)
 
-# Load and prepare data
-df, latest_year = load_data()
+# Filter based on selection
+filtered_df = df[df['country'].isin(selected_countries)]
 
 # Plot
 fig = px.scatter(
-    df,
+    filtered_df,
     x="renewables_share_energy",
     y="fossil_fuel_consumption",
     hover_name="country",
+    title=f"Renewable Share vs Fossil Fuel Consumption ({year})",
     labels={
         "renewables_share_energy": "Renewable Share (%)",
-        "fossil_fuel_consumption": "Fossil Fuel Consumption (TWh)"
-    },
-    title=f"Renewable Share vs Fossil Consumption in {latest_year}"
+        "fossil_fuel_consumption": "Fossil Consumption (TWh)"
+    }
 )
-fig.update_traces(marker=dict(size=10, color="green", opacity=0.7))
-fig.update_layout(hovermode="closest")
 st.plotly_chart(fig, use_container_width=True)
 
+# Narrative
 with st.expander("📌 Narrative"):
-    st.markdown(f"""
-    In **{latest_year}**, countries with higher **renewable shares** often show lower **fossil fuel consumption**, 
-    although some high-consumption economies still rely heavily on fossil fuels despite adopting renewables.
+    st.markdown("""
+    Generally, countries with **higher renewable share** tend to have **lower fossil consumption**, but many exceptions exist based on energy needs and policies.
     """)
 
+# Data Source
 with st.expander("📊 Data Source"):
     st.markdown("""
-    - **Source:** Our World in Data
-    - **File:** `owid-energy-data.xlsx`
-    - **Columns used:** `renewables_share_energy`, `fossil_fuel_consumption`, `country`, `year`
+    - Source: [OWID Energy Data](https://github.com/owid/energy-data)
+    - File used: `owid-energy-data.xlsx`
     """)
