@@ -1,39 +1,38 @@
-# pages/5_Countries_Growing_Renewables.py
+# pages/7_SDG72_Trend.py
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# Page Configuration
+# Page config
 st.set_page_config(
-    page_title="Global Growth in Renewable Energy Share",
+    page_title="Global Renewable Energy Share Trend (SDG 7.2)",
     layout="wide",
-    page_icon="🌍"
+    page_icon="🔋"
 )
 
-st.title("🌍 Global Growth in Renewable Energy Share")
+st.title("🔋 Global Growth in Renewable Energy Share")
 st.markdown("""
-This dashboard explores the global progress in the share of **modern renewables** in final energy consumption, as defined under **SDG 7.2**.
-It reflects how the world's energy consumption is becoming cleaner over time.
+This dashboard explores the global progress in the share of **modern renewables** in final energy consumption,
+as defined under **Sustainable Development Goal 7.2**. It reflects how the world's energy consumption is becoming cleaner over time.
 """)
 
 @st.cache_data
 def load_data():
-    df = pd.read_excel("data/Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx", skiprows=0)
+    df = pd.read_excel("data/Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx", skiprows=3)
     df.columns = df.columns.str.strip()
-    df = df.rename(columns={
-        "Year": "Year",
-        "Share of modern renewables": "Renewable Share (%)"
-    })
-    df = df[["Year", "Renewable Share (%)"]]
+    df = df.rename(columns={"Share of modern renewables": "Renewable Share (%)"})
+    df = df[["Year", "Renewable Share (%)"]].dropna()
     df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
     df["Renewable Share (%)"] = pd.to_numeric(df["Renewable Share (%)"], errors="coerce")
-    return df.dropna()
+    df = df.dropna()
+    return df
 
 # Load data
 df = load_data()
 
 # Preview
+total_years = df.shape[0]
 st.subheader("Data Preview")
 st.dataframe(df.head())
 
@@ -62,7 +61,7 @@ with st.expander("📌 Key Insights"):
 with st.expander("📊 Data Source"):
     st.markdown("""
     - **File:** `Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx`
-    - **Entity:** Global (World-level data only)
     - **Columns Used:** `Year`, `Share of modern renewables`
-    - **Source:** IEA Sustainable Development Goal 7: [IEA SDG 7 Report](https://www.iea.org/reports/tracking-sdg7-the-energy-progress-report-2022)
+    - **Entity:** Global only
+    - **Source:** IEA / Our World in Data
     """)
