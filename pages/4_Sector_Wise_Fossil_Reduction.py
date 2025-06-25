@@ -9,7 +9,7 @@ st.set_page_config(
     page_icon="🌐"
 )
 
-st.title("\ud83c\udf10 Petroleum & Liquids Production by Country")
+st.title("🌐 Petroleum & Liquids Production by Country")
 
 st.markdown("""
 Select a country (or “World”) to see how its various petroleum‐liquid production series evolved from 1973–2023.
@@ -39,7 +39,7 @@ def load_data():
     df = df[~df["series_name"].str.strip().isin(["Production"] + df["country"].unique().tolist())]
 
     # Detect year columns (string safe)
-    year_cols = [str(c) for c in df.columns if str(c).isdigit() and len(str(c)) == 4]
+    year_cols = [c for c in df.columns if str(c).isdigit() and len(str(c)) == 4]
 
     # Melt to long format
     df_long = df.melt(
@@ -52,13 +52,16 @@ def load_data():
     df_long["year"] = pd.to_numeric(df_long["year"], errors="coerce", downcast="integer")
     df_long["production_mbpd"] = pd.to_numeric(df_long["production_mbpd"], errors="coerce")
 
-    return df_long.dropna(subset=["production_mbpd"])
+    df_long = df_long.dropna(subset=["production_mbpd"]).copy()
+    df_long["country"] = df_long["country"].fillna("Unknown")
+
+    return df_long
 
 # Load the data
 df = load_data()
 
 # Dropdown for country selection
-available_countries = sorted(df["country"].unique())
+available_countries = sorted(df["country"].dropna().unique())
 selected_country = st.selectbox("Select a Country", ["World"] + [c for c in available_countries if c != "World"])
 
 # Filter data for selected country
