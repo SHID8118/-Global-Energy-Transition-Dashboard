@@ -1,4 +1,4 @@
-# pages/5_Global_Renewables_Share_World.py
+# pages/5_Countries_Growing_Renewables.py
 
 import streamlit as st
 import pandas as pd
@@ -11,7 +11,7 @@ st.set_page_config(
     page_icon="🌍"
 )
 
-st.title(":earth_africa: Global Growth in Renewable Energy Share")
+st.title("🌍 Global Growth in Renewable Energy Share")
 st.markdown("""
 This dashboard explores the global progress in the share of **modern renewables** in final energy consumption, as defined under **SDG 7.2**.
 It reflects how the world's energy consumption is becoming cleaner over time.
@@ -19,32 +19,27 @@ It reflects how the world's energy consumption is becoming cleaner over time.
 
 @st.cache_data
 def load_data():
-    df = pd.read_excel("data/Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx", skiprows=3)
+    df = pd.read_excel("data/Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx", skiprows=0)
     df.columns = df.columns.str.strip()
-    return df
+    df = df.rename(columns={
+        "Year": "Year",
+        "Share of modern renewables": "Renewable Share (%)"
+    })
+    df = df[["Year", "Renewable Share (%)"]]
+    df["Year"] = pd.to_numeric(df["Year"], errors="coerce")
+    df["Renewable Share (%)"] = pd.to_numeric(df["Renewable Share (%)"], errors="coerce")
+    return df.dropna()
 
 # Load data
 df = load_data()
 
-# Filter columns for year-wise data
-year_cols = [col for col in df.columns if str(col).isdigit() and len(str(col)) == 4]
-
-# Extract global row (usually the first row for World)
-df = df.iloc[[0]]  # Assume the first row is "World"
-df_long = df.melt(value_vars=year_cols, var_name="Year", value_name="Renewable Share (%)")
-
-# Clean and convert
-df_long["Year"] = pd.to_numeric(df_long["Year"], errors="coerce")
-df_long["Renewable Share (%)"] = pd.to_numeric(df_long["Renewable Share (%)"], errors="coerce")
-df_long = df_long.dropna()
-
 # Preview
 st.subheader("Data Preview")
-st.dataframe(df_long.head())
+st.dataframe(df.head())
 
 # Line Chart
 fig = px.line(
-    df_long,
+    df,
     x="Year",
     y="Renewable Share (%)",
     title="Global Renewable Energy Share in Final Energy Consumption (SDG 7.2)",
@@ -68,6 +63,6 @@ with st.expander("📊 Data Source"):
     st.markdown("""
     - **File:** `Renewable-share-_modern-renewables_-in-final-energy-consumption-_SDG-7.2_-World.xlsx`
     - **Entity:** Global (World-level data only)
-    - **Columns Used:** Years from 1990 to 2022 (actual availability may vary)
-    - **Source:** Our World in Data / IEA
+    - **Columns Used:** `Year`, `Share of modern renewables`
+    - **Source:** IEA Sustainable Development Goal 7: [IEA SDG 7 Report](https://www.iea.org/reports/tracking-sdg7-the-energy-progress-report-2022)
     """)
