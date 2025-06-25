@@ -28,7 +28,7 @@ page_map = {
     "Which countries have reduced their fossil fuel consumption the most in the last decade?": "1_Countries_Reducing_Fossil_Consumption",
     "Which regions or countries show a consistent decline in oil/gas/coal demand?": "2_Regions_Declining_Oil_Gas_Coal",
     "How has fossil fuel demand changed globally vs. in specific countries (e.g., India, China, US)?": "3_Global_vs_Country_Demand_Change",
-    "What sectors are driving fossil fuel reduction (transport, energy, industry)?": "4_Sector_Wise_Fossil_Reduction",
+    "What sectors are driving fossil fuel reduction (transport, energy, industry)?": "4_Petroleum & Liquids Production by Country",
     "Which countries have the highest growth in renewable energy share?": "5_Countries_Growing_Renewables",
     "What is the trend in modern renewables consumption (SDG 7.2 goal)?": "6_SDG72_Trend",
     "How does renewable energy growth correlate with reduction in fossil fuels?": "7_Renewables_vs_Fossil_Reduction",
