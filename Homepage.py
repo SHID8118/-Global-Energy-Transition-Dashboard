@@ -30,7 +30,7 @@ page_map = {
     "Which regions or countries show a consistent decline in oil/gas/coal demand?": "2_Regions_Declining_Oil_Gas_Coal",
     "How has fossil fuel demand changed globally vs. in specific countries (e.g., India, China, US)?": "3_Global_vs_Country_Demand_Change",
     "How have petroleum and liquid fuel production trends changed for individual countries (or globally) from 1973 to 2023?": "4_Petroleum & Liquids Production by Country",
-    "How has global energy intensity (measured in MJ per unit GDP PPP) changed over time, and is the world becoming more energy efficient?":"5_Global_Energy_Intensity_vs_GDP.py",
+    "How has global energy intensity (measured in MJ per unit GDP PPP) changed over time, and is the world becoming more energy efficient?":"5_Global_Energy_Intensity_vs_GDP PPP.py",
     "Which countries have the highest growth in renewable energy share?": "5_Countries_Growing_Renewables",
     "What is the trend in modern renewables consumption (SDG 7.2 goal)?": "6_SDG72_Trend",
     "How does renewable energy growth correlate with reduction in fossil fuels?": "7_Renewables_vs_Fossil_Reduction",
