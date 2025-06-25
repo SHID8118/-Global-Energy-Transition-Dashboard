@@ -4,51 +4,32 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-st.set_page_config(
-    page_title="Renewables vs Fossil Reduction",
-    layout="wide",
-    page_icon="♻️"
-)
+st.set_page_config(layout="wide", page_title="Renewables vs Fossils", page_icon="♻️")
 
-st.title("♻️ Renewables Growth vs Fossil Reduction")
+st.title("♻️ Renewable Share vs Fossil Fuel Consumption")
 st.markdown("""
-This dashboard visualizes the relationship between **renewable energy share** and **fossil fuel consumption** across countries
-based on the latest available data.
+This dashboard explores the correlation between countries' share of **renewable energy** and their **fossil fuel consumption**.
+We compare recent values of each and visualize their relationship.
 """)
 
 @st.cache_data
 def load_data():
     df = pd.read_excel("data/owid-energy-data.xlsx")
+    df.columns = df.columns.str.lower()  # normalize columns
 
-    # Ensure column names are stripped and lowercased for consistency
-    df.columns = df.columns.str.strip()
-
-    # Expected columns
-    cols_needed = [
-        "country", "Year",
-        "coal_consumption", "oil_consumption", "gas_consumption",
-        "renewables_share_energy"
-    ]
-
-    # Ensure all expected columns exist in the DataFrame
-    missing_cols = [col for col in cols_needed if col not in df.columns]
-    if missing_cols:
-        st.error(f"The following required columns are missing from the dataset: {missing_cols}")
-        st.stop()
-
-    # Filter for latest year available in the dataset
+    # Use latest available year
     latest_year = df["year"].max()
-    df_latest = df[df["year"] == latest_year][cols_needed]
+    df = df[df["year"] == latest_year]
 
-    # Drop rows with missing values
-    df_latest.dropna(inplace=True)
+    # Select required columns
+    cols_needed = [
+        "country", "renewables_share_energy", "fossil_fuel_consumption"
+    ]
+    df = df[cols_needed]
+    df = df.dropna()
 
-    # Calculate total fossil fuel consumption
-    df_latest["fossil_consumption"] = df_latest[[
-        "coal_consumption", "oil_consumption", "gas_consumption"
-    ]].sum(axis=1)
-
-    return df_latest, latest_year
+    df = df.sort_values("renewables_share_energy", ascending=False)
+    return df, latest_year
 
 # Load and prepare data
 df, latest_year = load_data()
@@ -57,33 +38,27 @@ df, latest_year = load_data()
 fig = px.scatter(
     df,
     x="renewables_share_energy",
-    y="fossil_consumption",
+    y="fossil_fuel_consumption",
     hover_name="country",
-    title=f"Renewables Share vs Fossil Fuel Consumption ({latest_year})",
     labels={
-        "renewables_share_energy": "Renewables Share in Energy (%)",
-        "fossil_consumption": "Total Fossil Fuel Consumption (TWh)"
+        "renewables_share_energy": "Renewable Share (%)",
+        "fossil_fuel_consumption": "Fossil Fuel Consumption (TWh)"
     },
-    color="renewables_share_energy",
-    size="fossil_consumption",
-    height=600
+    title=f"Renewable Share vs Fossil Consumption in {latest_year}"
 )
+fig.update_traces(marker=dict(size=10, color="green", opacity=0.7))
 fig.update_layout(hovermode="closest")
 st.plotly_chart(fig, use_container_width=True)
 
-# Narrative
-with st.expander("📌 Key Insights"):
+with st.expander("📌 Narrative"):
     st.markdown(f"""
-    - The scatter plot shows how countries vary in **renewables share** vs **fossil consumption**.
-    - Countries in the top-left tend to be **low fossil users** with **high renewable share**, showing clean energy leadership.
-    - Countries in the bottom-right rely heavily on fossil fuels and lag in renewables.
-    - This helps assess correlation between **clean energy adoption** and **reduction in fossil reliance**.
+    In **{latest_year}**, countries with higher **renewable shares** often show lower **fossil fuel consumption**, 
+    although some high-consumption economies still rely heavily on fossil fuels despite adopting renewables.
     """)
 
-# Data Source
 with st.expander("📊 Data Source"):
     st.markdown("""
+    - **Source:** Our World in Data
     - **File:** `owid-energy-data.xlsx`
-    - **Columns Used:** `country`, `year`, `coal_consumption`, `oil_consumption`, `gas_consumption`, `renewables_share_energy`
-    - **Filtered for Latest Year**: {latest_year}
+    - **Columns used:** `renewables_share_energy`, `fossil_fuel_consumption`, `country`, `year`
     """)
