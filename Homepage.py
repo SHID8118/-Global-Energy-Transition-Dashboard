@@ -16,7 +16,7 @@ questions = [
     "Which regions are leaders in renewables adoption?",
     "Which countries have reduced fossil fuel use while growing their GDP?",
     "What is the energy supply per unit GDP? Who is the most energy-efficient?",
-    "Is there a correlation between GDP growth and clean energy investment?",
+   
     "Compare fossil fuel usage trends between developed vs. developing nations.",
     "How does India compare to other BRICS nations in reducing fossil fuel use?",
     "Are countries with higher renewables shares also reducing emissions faster?",
@@ -37,7 +37,7 @@ page_map = {
     "Which regions are leaders in renewables adoption?": "9_Regions_Leading_Renewables",
     "Which countries have reduced fossil fuel use while growing their GDP?": "10_GDP_vs_Fossil_Reduction",
     "What is the energy supply per unit GDP? Who is the most energy-efficient?": "11_Energy_Supply_per_GDP",
-    "Is there a correlation between GDP growth and clean energy investment?": "12_Correlation_GDP_Clean_Energy",
+    
     "Compare fossil fuel usage trends between developed vs. developing nations.": "12_Developed_vs_Developing_Fossil",
     "How does India compare to other BRICS nations in reducing fossil fuel use?": "13_India_vs_BRICS",
     "Are countries with higher renewables shares also reducing emissions faster?": "14_Renewables_vs_Emissions",
