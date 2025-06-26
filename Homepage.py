@@ -35,7 +35,7 @@ page_map = {
     "What is the trend in modern renewables consumption (SDG 7.2 goal)?": "7_SDG72_Trend",
     "How does renewable energy growth correlate with reduction in fossil fuels?": "8_Renewables_vs_Fossil_Reduction",
     "Which regions are leaders in renewables adoption?": "9_Regions_Leading_Renewables",
-    "Which countries have reduced fossil fuel use while growing their GDP?": "9_GDP_vs_Fossil_Reduction",
+    "Which countries have reduced fossil fuel use while growing their GDP?": "10_GDP_vs_Fossil_Reduction",
     "What is the energy supply per unit GDP? Who is the most energy-efficient?": "10_Energy_Supply_per_GDP",
     "Is there a correlation between GDP growth and clean energy investment?": "11_Correlation_GDP_Clean_Energy",
     "Compare fossil fuel usage trends between developed vs. developing nations.": "12_Developed_vs_Developing_Fossil",
