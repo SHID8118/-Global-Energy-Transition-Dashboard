@@ -19,8 +19,7 @@ questions = [
    
     "Compare fossil fuel usage trends between developed vs. developing nations.",
     "How does India compare to other BRICS nations in reducing fossil fuel use?",
-    "Are countries with higher renewables shares also reducing emissions faster?",
-    "Which countries are on track to meet UN Sustainable Development Goal 7.2 (modern renewables)?",
+   
     "How far is the world from achieving a renewable-dominant energy mix?",
 ]
 question = st.selectbox("Choose a question to explore:", questions)
@@ -40,9 +39,8 @@ page_map = {
     
     "Compare fossil fuel usage trends between developed vs. developing nations.": "12_Developed_vs_Developing_Fossil",
     "How does India compare to other BRICS nations in reducing fossil fuel use?": "13_India_vs_BRICS",
-    "Are countries with higher renewables shares also reducing emissions faster?": "14_Renewables_vs_Emissions",
-    "Which countries are on track to meet UN Sustainable Development Goal 7.2 (modern renewables)?": "15_Countries_on_Track_SDG7",
-    "How far is the world from achieving a renewable-dominant energy mix?": "16_Progress_Towards_Renewable_Mix",
+   
+    "How far is the world from achieving a renewable-dominant energy mix?": "14_Progress_Towards_Renewable_Mix",
 }
 
 if st.button("Go to Analysis"):
