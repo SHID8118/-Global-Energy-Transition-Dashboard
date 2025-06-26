@@ -36,7 +36,7 @@ page_map = {
     "How does renewable energy growth correlate with reduction in fossil fuels?": "8_Renewables_vs_Fossil_Reduction",
     "Which regions are leaders in renewables adoption?": "9_Regions_Leading_Renewables",
     "Which countries have reduced fossil fuel use while growing their GDP?": "10_GDP_vs_Fossil_Reduction",
-    "What is the energy supply per unit GDP? Who is the most energy-efficient?": "10_Energy_Supply_per_GDP",
+    "What is the energy supply per unit GDP? Who is the most energy-efficient?": "11_Energy_Supply_per_GDP",
     "Is there a correlation between GDP growth and clean energy investment?": "11_Correlation_GDP_Clean_Energy",
     "Compare fossil fuel usage trends between developed vs. developing nations.": "12_Developed_vs_Developing_Fossil",
     "How does India compare to other BRICS nations in reducing fossil fuel use?": "13_India_vs_BRICS",
