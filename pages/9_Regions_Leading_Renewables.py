@@ -1,4 +1,4 @@
-# pages/8_Regions_Leading_Renewables.py
+# pages/9_Regions_Leading_Renewables.py
 """
 Dashboard: Which regions are leaders in renewables adoption?
 Using OWID energy data to aggregate the latest **renewables_share_energy** by region/continent.
