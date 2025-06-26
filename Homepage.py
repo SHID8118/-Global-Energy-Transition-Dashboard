@@ -56,4 +56,9 @@ with col_go:
         st.rerun()
 
 with col_link:
-    st.page_link(f"/{selected_page}", label="👉 Open selected page", icon="🔗")
+    # clickable hyperlink to the page
+    st.page_link(
+        f"pages/{selected_page}.py",  # path must match actual file inside /pages
+        label="👉 Open selected page",
+        icon="🔗"
+    )
