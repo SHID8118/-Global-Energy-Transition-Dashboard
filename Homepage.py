@@ -6,7 +6,7 @@ st.title("🌍 Global Energy Transition Dashboard")
 st.subheader("Explore energy‑transition questions powered by real‑world data")
 
 # ────────────────────────────────────────────────────────────────────────────────
-# Question list
+# Question list & page map
 # ────────────────────────────────────────────────────────────────────────────────
 questions = [
     "Which countries have reduced their fossil fuel consumption the most in the last decade?",
@@ -46,16 +46,14 @@ selected_q = st.selectbox("Choose a question to explore:", questions)
 selected_page = page_map[selected_q]
 
 # ────────────────────────────────────────────────────────────────────────────────
-# Navigation options
+# Navigation controls
 # ────────────────────────────────────────────────────────────────────────────────
 col_go, col_link = st.columns([1, 3])
 
 with col_go:
     if st.button("Go to analysis"):
-        # programmatic jump by altering query‑params (works in Streamlit ≥1.28)
-        st.experimental_set_query_params(page=selected_page)
-        st.experimental_rerun()
+        st.query_params["page"] = selected_page  # new API (Streamlit ≥1.30)
+        st.rerun()
 
 with col_link:
-    # direct clickable link (streamlit ≥1.28)
     st.page_link(f"/{selected_page}", label="👉 Open selected page", icon="🔗")
