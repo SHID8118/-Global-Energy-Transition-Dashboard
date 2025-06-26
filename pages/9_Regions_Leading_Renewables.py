@@ -1,105 +1,108 @@
-# pages/9_Regions_Leading_Renewables.py
+# pages/8_Regions_Leading_Renewables.py
 """
-Dashboard: Which regions are leaders in renewables adoption?
-Using OWID energy data to aggregate the latest **renewables_share_energy** by region/continent.
+Dashboard: Which regions *or* countries are leaders in renewables adoption?
+
+* If the OWID dataset has a **`continent`** column → rank continents.
+* If it does **not** → fall back to ranking **countries**.
 """
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# ────────────────────────────────────────────────────────────────────────────────
-# Page configuration
-# ────────────────────────────────────────────────────────────────────────────────
+# --------------------------------------------------
+# Page config
+# --------------------------------------------------
 st.set_page_config(
-    page_title="Regions Leading Renewables Adoption",
+    page_title="Leaders in Renewable Adoption",
     layout="wide",
-    page_icon="🌍"
+    page_icon="🌱"
 )
 
-st.title("🌍 Regions Leading in Renewable Energy Adoption")
-st.markdown(
-    """
-    This dashboard ranks world regions (continents) by their **share of renewables** in total
-    energy consumption, using the latest year available in the OWID dataset.
-    """
-)
+st.title("🌱 Leaders in Renewable Energy Adoption")
 
-# ────────────────────────────────────────────────────────────────────────────────
+# --------------------------------------------------
 # Data loader
-# ────────────────────────────────────────────────────────────────────────────────
+# --------------------------------------------------
 @st.cache_data
-
 def load_data(path: str = "data/owid-energy-data.xlsx"):
     df = pd.read_excel(path)
     df.columns = df.columns.str.strip().str.lower()
 
-    # Require year, country, continent, renewables_share_energy
-    needed = ["year", "country", "continent", "renewables_share_energy"]
-    missing = [c for c in needed if c not in df.columns]
-    if missing:
-        st.error(f"Missing columns in dataset: {missing}")
+    if "renewables_share_energy" not in df.columns:
+        st.error("Column `renewables_share_energy` not found in the dataset.")
         st.stop()
 
-    # Latest year with valid renewables share
     latest_year = int(df[df["renewables_share_energy"].notna()]["year"].max())
     latest_df = df[(df["year"] == latest_year) & df["renewables_share_energy"].notna()].copy()
 
-    # Drop aggregate entries like 'World' that have no continent value
-    latest_df = latest_df.dropna(subset=["continent"])
+    return latest_df, latest_year
 
-    # Aggregate by continent (mean renewables share)
-    region_df = (
-        latest_df.groupby("continent", as_index=False)
-        ["renewables_share_energy"].mean()
-        .rename(columns={"renewables_share_energy": "avg_renewables_share"})
-        .sort_values("avg_renewables_share", ascending=False)
+# --------------------------------------------------
+# Load data and determine grouping level
+# --------------------------------------------------
+latest_df, year = load_data()
+
+group_mode = "continent" if "continent" in latest_df.columns else "country"
+
+if group_mode == "continent":
+    st.markdown("*Grouping by **continent** (region)*")
+    data_df = (
+        latest_df.dropna(subset=["continent"])
+        .groupby("continent", as_index=False)["renewables_share_energy"].mean()
+        .rename(columns={"renewables_share_energy": "renew_share"})
+        .sort_values("renew_share", ascending=False)
     )
-    return region_df, latest_year
+else:
+    st.markdown("*`continent` column not present – grouping by **country***")
+    data_df = (
+        latest_df[["country", "renewables_share_energy"]]
+        .rename(columns={"renewables_share_energy": "renew_share"})
+        .sort_values("renew_share", ascending=False)
+    )
 
-# Load data
-region_df, year = load_data()
+# --------------------------------------------------
+# UI controls
+# --------------------------------------------------
+max_n = 25 if group_mode == "country" else len(data_df)
+N = st.slider("Show top N", 3, max_n, min(10, max_n))
+plot_df = data_df.head(N)
 
-# Optional multiselect to show/hide regions
-selected_regions = st.multiselect(
-    "Select regions to display:",
-    options=region_df["continent"].tolist(),
-    default=region_df["continent"].tolist()
-)
-plot_df = region_df[region_df["continent"].isin(selected_regions)]
-
-# Bar chart
+# --------------------------------------------------
+# Chart
+# --------------------------------------------------
 fig = px.bar(
     plot_df,
-    x="continent",
-    y="avg_renewables_share",
-    title=f"Average Renewable Energy Share by Region – {year}",
-    labels={"avg_renewables_share": "Renewables Share (%)", "continent": "Region"},
-    color="avg_renewables_share",
+    x=group_mode,
+    y="renew_share",
+    title=f"Top {N} {group_mode.capitalize()}s by Renewable Share – {year}",
+    labels={"renew_share": "Renewables Share (%)", group_mode: group_mode.capitalize()},
+    color="renew_share",
     color_continuous_scale="Greens",
     height=500,
     template="plotly_white"
 )
-fig.update_layout(xaxis_tickangle=-30)
+fig.update_layout(xaxis_tickangle=-45)
 st.plotly_chart(fig, use_container_width=True)
 
-# Key insights
+# --------------------------------------------------
+# Insights & source
+# --------------------------------------------------
 with st.expander("📌 Key Insights"):
     st.markdown(
         """
-        - Regions at the top of the bar chart have a **higher average share** of renewables in their
-          energy mix.
-        - Differences reflect policy, resource endowment, and investment in clean energy.
-        - Hover bars to see exact percentages.
-        """
+        - The bars show which {group_mode}s have the **highest share** of renewables in their total energy mix.
+        - Adjust the slider to reveal more or fewer entries.
+        - Hover a bar to see the exact percentage.
+        """.format(group_mode=group_mode)
     )
 
-# Data Source
 with st.expander("📊 Data Source"):
     st.markdown(
-        """
-        - **Dataset:** `owid-energy-data.xlsx` – Our World in Data
-        - **Metric used:** `renewables_share_energy` (share of renewables in total energy)
-        - **Year shown:** {year}
-        - Aggregated by continent using simple mean.
+        f"""
+        - **Dataset:** `owid-energy-data.xlsx` (Our World in Data)
+        - **Metric used:** `renewables_share_energy`
+        - **Year displayed:** {year}
+        - Grouped by **{group_mode}**.
         """
     )
