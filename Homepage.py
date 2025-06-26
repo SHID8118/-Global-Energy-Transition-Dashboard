@@ -1,45 +1,61 @@
 import streamlit as st
-from streamlit_extras.switch_page_button import switch_page
 
 st.set_page_config(page_title="Global Energy Insights", layout="wide")
-st.title("🌍 Global Energy Transition Dashboard")
-st.subheader("Explore energy transition questions based on real-world data")
 
+st.title("🌍 Global Energy Transition Dashboard")
+st.subheader("Explore energy‑transition questions powered by real‑world data")
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Question list
+# ────────────────────────────────────────────────────────────────────────────────
 questions = [
     "Which countries have reduced their fossil fuel consumption the most in the last decade?",
     "Which regions or countries show a consistent decline in oil/gas/coal demand?",
     "How has fossil fuel demand changed globally vs. in specific countries (e.g., India, China, US)?",
-    "How have petroleum and liquid fuel production trends changed for individual countries (or globally) from 1973 to 2023?",
+    "How have petroleum and liquid‑fuel production trends changed for individual countries (or globally) from 1973 to 2023?",
     "How has global energy intensity (measured in MJ per unit GDP PPP) changed over time, and is the world becoming more energy efficient?",
-    "Which countries are improving energy efficiency in terms of energy used per unit of economic output (PPP-adjusted)?",
-    "What is the trend in modern renewables consumption (SDG 7.2 goal)?",
+    "Which countries are improving energy efficiency in terms of energy used per unit of economic output (PPP‑adjusted)?",
+    "What is the trend in modern renewables consumption (SDG 7.2 goal)?",
     "How does renewable energy growth correlate with reduction in fossil fuels?",
     "Which regions are leaders in renewables adoption?",
     "Which countries have reduced fossil fuel use while growing their GDP?",
-    "What is the energy supply per unit GDP? Who is the most energy-efficient?",
+    "What is the energy supply per unit GDP? Who is the most energy‑efficient?",
     "Compare fossil fuel usage trends between developed vs. developing nations.",
     "How does India compare to other BRICS nations in reducing fossil fuel use?",
-    "How far is the world from achieving a renewable-dominant energy mix?",
+    "How far is the world from achieving a renewable‑dominant energy mix?",
 ]
 
-question = st.selectbox("Choose a question to explore:", questions)
-
 page_map = {
-    "Which countries have reduced their fossil fuel consumption the most in the last decade?": "1_Countries_Reducing_Fossil_Consumption",
-    "Which regions or countries show a consistent decline in oil/gas/coal demand?": "2_Regions_Declining_Oil_Gas_Coal",
-    "How has fossil fuel demand changed globally vs. in specific countries (e.g., India, China, US)?": "3_Global_vs_Country_Demand_Change",
-    "How have petroleum and liquid fuel production trends changed for individual countries (or globally) from 1973 to 2023?": "4_Petroleum_and_Liquids_Production",
-    "How has global energy intensity (measured in MJ per unit GDP PPP) changed over time, and is the world becoming more energy efficient?": "5_Global_Energy_Intensity_vs_GDP",
-    "Which countries are improving energy efficiency in terms of energy used per unit of economic output (PPP-adjusted)?": "6_Energy_Efficiency_by_Country",
-    "What is the trend in modern renewables consumption (SDG 7.2 goal)?": "7_SDG72_Trend",
-    "How does renewable energy growth correlate with reduction in fossil fuels?": "8_Renewables_vs_Fossil_Reduction",
-    "Which regions are leaders in renewables adoption?": "9_Regions_Leading_Renewables",
-    "Which countries have reduced fossil fuel use while growing their GDP?": "10_GDP_vs_Fossil_Reduction",
-    "What is the energy supply per unit GDP? Who is the most energy-efficient?": "11_Energy_Supply_per_GDP",
-    "Compare fossil fuel usage trends between developed vs. developing nations.": "12_Developed_vs_Developing_Fossil",
-    "How does India compare to other BRICS nations in reducing fossil fuel use?": "13_India_vs_BRICS",
-    "How far is the world from achieving a renewable-dominant energy mix?": "14_Progress_Towards_Renewable_Mix",
+    questions[0]: "1_Countries_Reducing_Fossil_Consumption",
+    questions[1]: "2_Regions_Declining_Oil_Gas_Coal",
+    questions[2]: "3_Global_vs_Country_Demand_Change",
+    questions[3]: "4_Petroleum_and_Liquids_Production",
+    questions[4]: "5_Global_Energy_Intensity_vs_GDP",
+    questions[5]: "6_Energy_Efficiency_by_Country",
+    questions[6]: "7_SDG72_Trend",
+    questions[7]: "8_Renewables_vs_Fossil_Reduction",
+    questions[8]: "9_Regions_Leading_Renewables",
+    questions[9]: "10_GDP_vs_Fossil_Reduction",
+    questions[10]: "11_Energy_Supply_per_GDP",
+    questions[11]: "12_Developed_vs_Developing_Fossil",
+    questions[12]: "13_India_vs_BRICS",
+    questions[13]: "16_Progress_Towards_Renewable_Mix",
 }
 
-if st.button("Go to Analysis"):
-    switch_page(page_map[question])
+selected_q = st.selectbox("Choose a question to explore:", questions)
+selected_page = page_map[selected_q]
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Navigation options
+# ────────────────────────────────────────────────────────────────────────────────
+col_go, col_link = st.columns([1, 3])
+
+with col_go:
+    if st.button("Go to analysis"):
+        # programmatic jump by altering query‑params (works in Streamlit ≥1.28)
+        st.experimental_set_query_params(page=selected_page)
+        st.experimental_rerun()
+
+with col_link:
+    # direct clickable link (streamlit ≥1.28)
+    st.page_link(f"/{selected_page}", label="👉 Open selected page", icon="🔗")
