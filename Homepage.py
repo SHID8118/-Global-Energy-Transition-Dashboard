@@ -34,7 +34,7 @@ page_map = {
      "Which countries are improving energy efficiency in terms of energy used per unit of economic output (PPP-adjusted)?":"6_Global_Energy_Intensity_vs_GDP_PPP.py",
     "What is the trend in modern renewables consumption (SDG 7.2 goal)?": "7_SDG72_Trend",
     "How does renewable energy growth correlate with reduction in fossil fuels?": "8_Renewables_vs_Fossil_Reduction",
-    "Which regions are leaders in renewables adoption?": "8_Regions_Leading_Renewables",
+    "Which regions are leaders in renewables adoption?": "9_Regions_Leading_Renewables",
     "Which countries have reduced fossil fuel use while growing their GDP?": "9_GDP_vs_Fossil_Reduction",
     "What is the energy supply per unit GDP? Who is the most energy-efficient?": "10_Energy_Supply_per_GDP",
     "Is there a correlation between GDP growth and clean energy investment?": "11_Correlation_GDP_Clean_Energy",
