@@ -1,4 +1,4 @@
-# pages/8_Regions_Leading_Renewables.py
+# pages/9_Regions_Leading_Renewables.py
 """
 Dashboard: Which regions *or* countries are leaders in renewables adoption?
 
@@ -43,10 +43,8 @@ def load_data(path: str = "data/owid-energy-data.xlsx"):
 # --------------------------------------------------
 latest_df, year = load_data()
 
-group_mode = "continent" if "continent" in latest_df.columns else "country"
-
-if group_mode == "continent":
-    st.markdown("*Grouping by **continent** (region)*")
+if "continent" in latest_df.columns:
+    group_mode = "continent"
     data_df = (
         latest_df.dropna(subset=["continent"])
         .groupby("continent", as_index=False)["renewables_share_energy"].mean()
@@ -54,7 +52,7 @@ if group_mode == "continent":
         .sort_values("renew_share", ascending=False)
     )
 else:
-    st.markdown("*`continent` column not present – grouping by **country***")
+    group_mode = "country"
     data_df = (
         latest_df[["country", "renewables_share_energy"]]
         .rename(columns={"renewables_share_energy": "renew_share"})
@@ -86,15 +84,21 @@ fig.update_layout(xaxis_tickangle=-45)
 st.plotly_chart(fig, use_container_width=True)
 
 # --------------------------------------------------
+# All data section
+# --------------------------------------------------
+st.subheader("Full Ranking of All Countries")
+st.dataframe(data_df.reset_index(drop=True))
+
+# --------------------------------------------------
 # Insights & source
 # --------------------------------------------------
 with st.expander("📌 Key Insights"):
     st.markdown(
-        """
+        f"""
         - The bars show which {group_mode}s have the **highest share** of renewables in their total energy mix.
         - Adjust the slider to reveal more or fewer entries.
         - Hover a bar to see the exact percentage.
-        """.format(group_mode=group_mode)
+        """
     )
 
 with st.expander("📊 Data Source"):
