@@ -26,7 +26,7 @@ question_page_pairs = [
 ]
 
 questions = [q for q, _ in question_page_pairs]
-page_map = {q: p for q, p in question_page_pairs]
+page_map = {q: p for q, p in question_page_pairs}
 
 selected_q = st.selectbox("Choose a question to explore:", questions)
 selected_page = page_map[selected_q]
