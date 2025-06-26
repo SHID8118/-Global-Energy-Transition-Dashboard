@@ -23,6 +23,7 @@ question_page_pairs = [
     ("Compare fossil fuel usage trends between developed vs. developing nations.", "12_Developed_vs_Developing_Fossil"),
     ("How does India compare to other BRICS nations in reducing fossil fuel use?", "13_India_vs_BRICS"),
     ("How far is the world from achieving a renewable‑dominant energy mix?", "16_Progress_Towards_Renewable_Mix"),
+    ("Oil-price shock years (2008-09, 2014-15, 2022-23): Did renewables investment spike globally?","17_Oil_Shock_vs_Renewable_Spike"),
 ]
 
 questions = [q for q, _ in question_page_pairs]
