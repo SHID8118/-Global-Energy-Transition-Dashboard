@@ -1,118 +1,98 @@
 # pages/10_GDP_vs_Fossil_Reduction.py
 """
-Dashboard question:
-**Which countries have reduced fossil fuel use while growing their GDP?**
+Dashboard: **Which countries have reduced fossil fuel use while growing GDP?**
 
-Compares percentage‑change in real GDP versus percentage‑change in total fossil‑fuel
-consumption (TWh) between the latest OWID year and 10 years earlier.
+Logic tweak
+-----------
+* Find the **latest year** in OWID data that has *both* `gdp` and
+  `fossil_fuel_consumption` for ≥ 1 country (often 2022).
+* Work **backwards** up to 10 years; choose the earliest year within that
+  window that still has complete data for the same countries.
+* Calculate %‑change (GDP ↑ vs Fossils ↓).
 """
 
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# ────────────────────────────────────────────────────────────────────────────────
-# Page config
-# ────────────────────────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="GDP ↑ vs Fossil ↓",
-    layout="wide",
-    page_icon="📈"
-)
+st.set_page_config(page_title="GDP ↑ vs Fossil ↓", layout="wide", page_icon="📈")
 
-st.title("📈 Countries Growing GDP while Cutting Fossil Fuel Use")
-st.markdown(
-    """
-    **Objective:** Identify economies that have **increased real GDP** while **reducing fossil‑fuel
-    consumption** over the past decade.
-    """
-)
+st.title("📈 Countries Growing GDP while Cutting Fossil-Fuel Use")
 
-# ────────────────────────────────────────────────────────────────────────────────
-# Data loader
-# ────────────────────────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data(path: str = "data/owid-energy-data.xlsx"):
     df = pd.read_excel(path)
     df.columns = df.columns.str.strip().str.lower()
 
-    cols_needed = ["country", "year", "gdp", "fossil_fuel_consumption"]
-    missing = [c for c in cols_needed if c not in df.columns]
-    if missing:
-        st.error(f"Missing columns in dataset: {missing}")
+    required = ["country", "year", "gdp", "fossil_fuel_consumption"]
+    if any(c not in df.columns for c in required):
+        st.error("Dataset missing required columns.")
         st.stop()
 
+    # keep only rows with both metrics
+    df = df.dropna(subset=["gdp", "fossil_fuel_consumption"])
+
     latest_year = int(df["year"].max())
-    base_year = latest_year - 10
+
+    # search for a base year 5‑10 years back with enough overlap
+    base_year = None
+    for offset in range(10, 4, -1):  # 10→5
+        cand = latest_year - offset
+        common = set(df[df["year"] == latest_year]["country"]).intersection(
+            df[df["year"] == cand]["country"]
+        )
+        if len(common) >= 30:  # arbitrary threshold for meaningful sample
+            base_year = cand
+            break
+
+    if base_year is None:
+        st.error("Could not find a suitable base year with overlapping data.")
+        st.stop()
 
     latest = df[df["year"] == latest_year][["country", "gdp", "fossil_fuel_consumption"]]
     base = df[df["year"] == base_year][["country", "gdp", "fossil_fuel_consumption"]]
 
     merged = (
-        latest.merge(base, on="country", suffixes=("_latest", "_base"))
-        .dropna(subset=["gdp_latest", "gdp_base", "fossil_fuel_consumption_latest", "fossil_fuel_consumption_base"])
-    )
-
-    merged["gdp_change_pct"] = (merged["gdp_latest"] - merged["gdp_base"]) / merged["gdp_base"] * 100
-    merged["fossil_change_pct"] = (
-        (merged["fossil_fuel_consumption_latest"] - merged["fossil_fuel_consumption_base"]) /
-        merged["fossil_fuel_consumption_base"] * 100
+        latest.merge(base, on="country", how="inner", suffixes=("_latest", "_base"))
+        .assign(
+            gdp_change_pct=lambda d: (d["gdp_latest"] - d["gdp_base"]) / d["gdp_base"] * 100,
+            fossil_change_pct=lambda d: (d["fossil_fuel_consumption_latest"] - d["fossil_fuel_consumption_base"]) / d["fossil_fuel_consumption_base"] * 100,
+        )
     )
     return merged, base_year, latest_year
 
-# Load
+# load
 plot_df, base_year, latest_year = load_data()
 
-# ────────────────────────────────────────────────────────────────────────────────
-# Multiselect for focus countries
-# ────────────────────────────────────────────────────────────────────────────────
-all_countries = sorted(plot_df["country"].unique())
-default_select = plot_df[(plot_df["gdp_change_pct"] > 0) & (plot_df["fossil_change_pct"] < 0)]["country"].head(8).tolist()
-selected = st.multiselect("Highlight countries (optional):", all_countries, default_select)
+# multiselect
+countries = sorted(plot_df["country"].unique())
+select = st.multiselect("Highlight countries (optional):", countries)
+show_df = plot_df if not select else plot_df[plot_df["country"].isin(select)]
 
-highlight_df = plot_df[plot_df["country"].isin(selected)] if selected else plot_df
-
-# ────────────────────────────────────────────────────────────────────────────────
-# Scatter plot
-# ────────────────────────────────────────────────────────────────────────────────
+# scatter
 fig = px.scatter(
-    highlight_df,
+    show_df,
     x="gdp_change_pct",
     y="fossil_change_pct",
     hover_name="country",
-    labels={"gdp_change_pct": "GDP change %", "fossil_change_pct": "Fossil‑fuel change %"},
-    title=f"GDP Growth vs Fossil Reduction ({base_year} → {latest_year})",
+    title=f"GDP change vs Fossil change  ( {base_year} → {latest_year} )",
+    labels={"gdp_change_pct": "GDP change %", "fossil_change_pct": "Fossil‑fuel change %"},
     color="gdp_change_pct",
     template="plotly_white"
 )
-fig.add_shape(type="line", x0=0, x1=0, y0=plot_df["fossil_change_pct"].min(), y1=plot_df["fossil_change_pct"].max(), line=dict(dash="dash", color="grey"))
-fig.add_shape(type="line", y0=0, y1=0, x0=plot_df["gdp_change_pct"].min(), x1=plot_df["gdp_change_pct"].max(), line=dict(dash="dash", color="grey"))
+fig.add_vline(x=0, line_dash="dash", line_color="grey")
+fig.add_hline(y=0, line_dash="dash", line_color="grey")
 fig.update_layout(hovermode="closest")
 st.plotly_chart(fig, use_container_width=True)
 
-# ────────────────────────────────────────────────────────────────────────────────
-# Data table
-# ────────────────────────────────────────────────────────────────────────────────
-with st.expander("🔍 Full data"):
-    st.dataframe(plot_df.sort_values(["gdp_change_pct"], ascending=False).reset_index(drop=True))
+with st.expander("🔍 Full table"):
+    st.dataframe(plot_df.sort_values("gdp_change_pct", ascending=False))
 
-# ────────────────────────────────────────────────────────────────────────────────
-# Insights & source
-# ────────────────────────────────────────────────────────────────────────────────
-with st.expander("📌 Key Insights"):
+with st.expander("📌 Insights"):
     st.markdown(
-        f"""
-        - **Quadrant analysis:**
-          - **Upper‑left** (GDP ↑ / Fossil ↓) → successful decoupling.
-          - **Lower‑right** (GDP ↓ / Fossil ↑) → undesirable trend.
-        - Time range: **{base_year} → {latest_year}**.
-        """
+        f"**Upper‑left quadrant**  → GDP ↑, Fossils ↓  → successful decoupling.\n"
+        f"Period analysed: **{base_year}** → **{latest_year}**."
     )
 
 with st.expander("📊 Data Source"):
-    st.markdown(
-        """
-        - **Dataset:** `owid-energy-data.xlsx` – Our World in Data
-        - **Variables:** `gdp`, `fossil_fuel_consumption`, `year`, `country`
-        """
-    )
+    st.markdown("OWID energy dataset · variables: gdp, fossil_fuel_consumption · XLSX file")
